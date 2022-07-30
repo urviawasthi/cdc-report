@@ -1,0 +1,155 @@
+ <!-- used https://d3-graph-gallery.com/graph/barplot_basic.html for tutorial  -->
+ <!-- dataset: https://www.cdc.gov/poxvirus/monkeypox/response/2022/mpx-trends.html -->
+<!DOCTYPE html> 
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title> Narrative Visualization Project </title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"> </script>
+        <link rel="stylesheet" href="chart.css" />
+    </head>
+
+    <body onload="init()">
+        <h1 class="header"> Monkeypox Cases in the United States </h1>
+        <h2 class="header2"> As reported to the Center for Disease Control </h2>
+        <div id="progress">
+            <a class="switch" href="javascript: switchScene('scene_1'); loadScene('scene_1')"><span>1</span></a>
+            <a class="switch" href="javascript: switchScene('scene_2'); loadScene('scene_2')"><span>2</span></a>
+            <a class="switch" href="javascript: switchScene('scene_3'); loadScene('scene_3')"><span>3</span></a>
+        </div>
+        
+        <div id="explanation">
+            <div id="scene_1" class="scene" style="display: none;">
+                <h3>First Appearance</h3>
+                
+                <p>The first case of monkeypox reported in the 2022 US outbreak occurred on May 17th, 2022. In the span of the next four weeks, cases did not show any growth. Rather, the highest number of cases reported at one time was only 6.</p>
+            </div>
+            
+            <div id="scene_2" class="scene" style="display: none;">
+                <h3>Rising Cases</h3>
+                
+                <p>In the next four weeks, cases started growing, although not yet with exponential growth. The highest number of reported cases of monkeypox was up to 100 during the end of this time period.</p>
+            </div>
+            
+            <div id="scene_3" class="scene" style="display: none;">
+                <h3>Exponential Growth</h3>
+                
+                <p>In the last four weeks, we see exponential growth in the cases of monkeypox. Studies predict that this number will continue to grow, perhaps indicating the oncoming of another global pandemic.</p>
+                <p>According to the CDC, "as of July 25, 2022, there are 3,487 cases in 45 states". </p>
+            </div>
+        </div>
+        
+        <div id="stage">
+        </div>
+
+        <script>
+            // setting functionality to switch scenes
+            function switchScene(sceneName) {
+                // clear all other scenes
+                var scene_1Div = document.getElementById("scene_1")
+                var scene_2Div = document.getElementById("scene_2")
+                var scene_3Div = document.getElementById("scene_3")
+                scene_1Div.style.display = "none";
+                scene_2Div.style.display = "none";
+                scene_3Div.style.display = "none";
+
+                // toggle display for current scene
+                var sceneDiv = document.getElementById(sceneName)
+                if (sceneDiv.style.display === "none") {
+                    sceneDiv.style.display = "block";
+                } else {
+                    sceneDiv.style.display = "none";
+                }
+            }
+
+            // have a graphic to start
+            function init() {
+                switchScene("scene_1")
+                loadScene("scene_1")
+            }
+
+            function loadScene(sceneName) {
+                // first clear the svg
+                document.getElementById("stage").innerHTML = "";
+
+                // next set parameters according to scene
+                if (sceneName === "scene_1") {
+                    yaxis_upper = 50;
+                    path_to_data = "monkeypox_data1.csv"
+                } else if (sceneName === "scene_2") {
+                    yaxis_upper = 100;
+                    path_to_data = "monkeypox_data2.csv"
+                } else {
+                    yaxis_upper = 500;
+                    path_to_data = "monkeypox_data3.csv"
+                }
+                
+                // set the dimensions and margins of the graph
+                var margin = {top: 30, right: 30, bottom: 70, left: 60},
+                    width = 960 - margin.left - margin.right,
+                    height = 400 - margin.top - margin.bottom;
+
+                // append the svg object to the body of the page
+                var svg = d3.select("#stage")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform",
+                        "translate(" + margin.left + "," + margin.top + ")");
+               
+                d3.select('body')
+                .append('div')
+                .attr('id', 'tooltip')
+                .attr('style', 'position: absolute; opacity: 0;');
+               
+                // Parse the Data
+                d3.csv(path_to_data, function(data) {
+
+                    // X axis
+                    var x = d3.scaleBand()
+                    .range([ 0, width ])
+                    .domain(data.map(function(d) { return d.Date; }))
+                    .padding(0.2);
+                    svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x))
+                    .selectAll("text")
+                        .attr("transform", "translate(-10,0)rotate(-45)")
+                        .style("text-anchor", "end");
+
+                    // Add Y axis
+                    var y = d3.scaleLinear()
+                    .domain([0, yaxis_upper])
+                    .range([ height, 0]);
+                    svg.append("g")
+                    .call(d3.axisLeft(y));
+
+                    // Bars
+                    svg.selectAll("bar")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                        .attr("x", function(d) { return x(d.Date); })
+                        .attr("y", function(d) { return y(d.Cases); })
+                        .attr("width", x.bandwidth())
+                        .attr("height", function(d) { return height - y(d.Cases); })
+                        .attr("fill", "#f4511e")
+                    .on('mouseenter', function (d, i) {
+                        d3.select(this)
+                        .attr('opacity', 0.5)
+                        d3.select('#tooltip').transition().duration(200).style('opacity', 1).text("Date:" + d.Date + " Cases:" + d.Cases).style('left', (d3.event.pageX+10) + 'px').style('top', (d3.event.pageY-30) + 'px')
+                        })
+                    .on('mouseleave', function (d, i) {
+                        d3.select(this).attr('opacity', 1)
+                        d3.select('#tooltip').style('opacity', 0)
+
+                    })
+                    
+                })
+            }
+        </script>
+    </body>
+        
+</html>
