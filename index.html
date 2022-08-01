@@ -85,12 +85,12 @@
                     path_to_data = "monkeypox_data3.csv"
                 }
                 
-                // set the dimensions and margins of the graph
+                // set the dimensions and margins of the graph  https://d3-graph-gallery.com/graph/barplot_basic.html for formatting!
                 var margin = {top: 30, right: 30, bottom: 70, left: 60},
                     width = 960 - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom;
 
-                // append the svg object to the body of the page
+                // append the svg object to the body of the page  https://d3-graph-gallery.com/graph/barplot_basic.html for formatting!
                 var svg = d3.select("#stage")
                 .append("svg")
                     .attr("width", width + margin.left + margin.right)
@@ -99,35 +99,31 @@
                     .attr("transform",
                         "translate(" + margin.left + "," + margin.top + ")");
                
+                // add tooltip to div for annotation purposes
                 d3.select('body')
                 .append('div')
                 .attr('id', 'tooltip')
                 .attr('style', 'position: absolute; opacity: 0;');
                
-                // Parse the Data
+                // parse data and populate bar graph
                 d3.csv(path_to_data, function(data) {
-
-                    // X axis
-                    var x = d3.scaleBand()
-                    .range([ 0, width ])
-                    .domain(data.map(function(d) { return d.Date; }))
-                    .padding(0.2);
+                    // define x axis: https://d3-graph-gallery.com/graph/barplot_basic.html for formatting!
+                    var x = d3.scaleBand().range([0, width]).domain(data.map(function(d) { return d.Date; })).padding(0.2);
+                   
                     svg.append("g")
                     .attr("transform", "translate(0," + height + ")")
                     .call(d3.axisBottom(x))
-                    .selectAll("text")
+                    .selectAll("text") 
                         .attr("transform", "translate(-10,0)rotate(-45)")
                         .style("text-anchor", "end");
 
-                    // Add Y axis
-                    var y = d3.scaleLinear()
-                    .domain([0, yaxis_upper])
-                    .range([ height, 0]);
+                    // define y axis
+                    var y = d3.scaleLinear().domain([0, yaxis_upper]).range([height, 0]);
                     svg.append("g")
                     .call(d3.axisLeft(y));
 
-                    // Bars
-                    svg.selectAll("bar")
+                    // populate bar graph
+                    svg.selectAll()
                     .data(data)
                     .enter()
                     .append("rect")
@@ -145,8 +141,7 @@
                         d3.select(this).attr('opacity', 1)
                         d3.select('#tooltip').style('opacity', 0)
 
-                    })
-                    
+                    })             
                 })
             }
         </script>
